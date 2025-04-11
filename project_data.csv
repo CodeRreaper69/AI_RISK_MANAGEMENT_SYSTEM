@@ -1,0 +1,11 @@
+project,project_type,client,start_date,deadline,delay_days,payment_status,resignations,risk_score,risk_level,budget,spent,completion,team_size
+Cloud Migration,Infrastructure,Acme Corp,2025-01-22,2025-09-25,5,On Time,1,25,Low,111835,75661.18214847926,38,3
+Web App Development,Software Development,TechGiant,2024-10-17,2025-09-20,24,On Time,0,40,Medium,240455,215550.50131044633,64,5
+Mobile App,Software Development,MediHealth,2025-03-11,2025-09-19,10,On Time,1,40,Medium,443694,269153.2179402665,51,3
+Data Center Setup,Infrastructure,FinancePro,2024-12-23,2025-05-05,4,On Time,1,23,Low,341107,348442.3888016881,23,3
+CRM Implementation,Software Development,RetailMaster,2025-01-16,2025-11-29,1,Late,2,42,Medium,469294,275963.98345954274,30,4
+Security Audit,Consulting,GovAgency,2024-11-26,2025-05-19,7,On Time,1,31,Low,368664,378409.4524143364,21,10
+DevOps Pipeline,Infrastructure,StartupX,2025-03-08,2025-12-02,9,Late,2,62,Medium,50162,48915.10435917558,25,7
+IoT Platform,Software Development,EduTech,2025-01-25,2025-11-21,13,Late,1,64,Medium,489935,401724.92244874936,26,5
+AI Chatbot,Research,ManufactureAll,2024-10-30,2025-04-16,6,On Time,0,13,Low,414430,259759.15059248512,38,6
+Network Upgrade,Maintenance,LogisticsPrime,2025-02-21,2025-10-06,19,On Time,3,75,High,357525,414785.9930169411,63,3
