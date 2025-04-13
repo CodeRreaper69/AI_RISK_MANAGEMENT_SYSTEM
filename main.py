@@ -291,20 +291,20 @@ def main():
         selected_project = st.selectbox("Choose Project", df_projects["project"].tolist())
         st.session_state.selected_project = selected_project
         
-        # Gemini API key input
-        st.divider()
-        st.subheader("🔑 Gemini API Setup")
-        api_key = st.text_input("Gemini API Key", 
-                               value=st.session_state.get("gemini_api_key", ""), 
-                               type="password",
-                               help="Enter your Google Gemini API key to enable the AI chatbot")
+        # # Gemini API key input
+        # st.divider()
+        # st.subheader("🔑 Gemini API Setup")
+        # api_key = st.text_input("Gemini API Key", 
+        #                        value=st.session_state.get("gemini_api_key", ""), 
+        #                        type="password",
+        #                        help="Enter your Google Gemini API key to enable the AI chatbot")
         
-        if api_key:
-            st.session_state.gemini_api_key = api_key
-            if not gemini_model:
-                gemini_model = initialize_gemini()
-                if gemini_model:
-                    st.success("Gemini API connected successfully!")
+        # if api_key:
+        #     st.session_state.gemini_api_key = api_key
+        #     if not gemini_model:
+        #         gemini_model = initialize_gemini()
+        #         if gemini_model:
+        #             st.success("Gemini API connected successfully!")
                     
     # Get selected project data
     project_data = df_projects[df_projects["project"] == st.session_state.selected_project].iloc[0].to_dict()
