@@ -297,8 +297,8 @@ def main():
         df_projects = generate_dynamic_dashboard_values(df_projects)
         st.session_state.last_refresh = datetime.datetime.now()
     
-# Calculate additional metrics
-df_projects['budget_variance'] = ((df_projects['spent'] / df_projects['budget']) - 1) * 100
+    # Calculate additional metrics
+    df_projects['budget_variance'] = ((df_projects['spent'] / df_projects['budget']) - 1) * 100
 
     
     news_data = load_sample_news_data()
