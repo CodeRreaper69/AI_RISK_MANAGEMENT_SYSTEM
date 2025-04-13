@@ -255,6 +255,7 @@ def main():
             with st.spinner("Fetching live data for all projects...It may take a few seconds."):
                 st.session_state.master_news = create_master_news_list(df_projects, gemini_model)
     except:
+        pass
         
     
     # Update risk scores with external factors (market risk)
