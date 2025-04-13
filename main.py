@@ -241,17 +241,21 @@ def main():
     # Initialize Gemini model
     gemini_model = initialize_gemini()
 
-    # Load sample data
+    # Load sample data if live news does not works
     df_projects = load_sample_project_data()
+    news_data = load_sample_news_data()
     
     # Calculate additional metrics
     df_projects['budget_variance'] = ((df_projects['spent'] / df_projects['budget']) - 1) * 100
     
     # Check if master news list is already in session state
-    if 'master_news' not in st.session_state:
-        # Create master news list for all projects
-        with st.spinner("Fetching news data for all projects...It may take a few seconds."):
-            st.session_state.master_news = create_master_news_list(df_projects, gemini_model)
+    try:
+        if 'master_news' not in st.session_state:
+            # Create master news list for all projects
+            with st.spinner("Fetching live data for all projects...It may take a few seconds."):
+                st.session_state.master_news = create_master_news_list(df_projects, gemini_model)
+    except:
+        
     
     # Update risk scores with external factors (market risk)
     for idx, row in df_projects.iterrows():
