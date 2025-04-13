@@ -10,7 +10,7 @@ import streamlit as st
 load_dotenv()
 
 
-def fetch_news(query, limit=5):
+def fetch_news2(query, limit=5):
     # api_key = os.getenv("NEWS_API_KEY")
     api_key = st.secrets["NEWS_API_KEY"]
     
@@ -41,6 +41,55 @@ def fetch_news(query, limit=5):
             break  # Stop after collecting the desired number of articles
 
     return filtered_articles
+
+
+def fetch_news(query, limit=5):
+    import re
+    
+    # Lowercase query
+    query = query.lower()
+
+    # Offensive keywords to filter out
+    offensive_keywords = {"sex", "porn", "violence", "drugs", "gambling", "nudity", "explicit"}
+
+    # Collect all NEWS_API_KEY_* from st.secrets, ignoring empty ones
+    api_keys = [
+        v for k, v in st.secrets.items()
+        if re.match(r"NEWS_API_KEY_\d+", k) and v.strip()
+    ]
+
+    for key in api_keys:
+        try:
+            newsapi = NewsApiClient(api_key=key)
+
+            all_articles = newsapi.get_everything(
+                q=query,
+                language='en',
+                sort_by='relevancy',
+                page=1,
+                page_size=8  # Fetch a few more to allow for filtering
+            )
+
+            # Filter articles
+            filtered_articles = []
+            for article in all_articles['articles']:
+                content = (article.get("title", "") + " " + article.get("description", "")).lower()
+                if not any(off_word in content for off_word in offensive_keywords):
+                    filtered_articles.append(article)
+                if len(filtered_articles) >= limit:
+                    break
+
+            if filtered_articles:
+                return filtered_articles
+
+        except Exception as e:
+            st.warning(f"API key ending in ...{key[-4:]} failed: {e}. Trying next key...")
+            continue
+
+    st.error("All NewsAPI keys failed or returned no valid articles.")
+    return []
+
+
 
 
 def generate_query(model, headline):
