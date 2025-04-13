@@ -83,7 +83,7 @@ def fetch_news(query, limit=5):
                 return filtered_articles
 
         except Exception as e:
-            st.warning(f"API key ending in ...{key[-4:]} failed: {e}. Trying next key...")
+            # st.warning(f"API key ending in ...{key[-4:]} failed: {e}. Trying next key...")
             continue
 
     st.error("All NewsAPI keys failed or returned no valid articles.")
