@@ -10,7 +10,9 @@ load_dotenv()
 
 
 def fetch_news(query):
-    api_key = os.getenv("NEWS_API_KEY")
+    # api_key = os.getenv("NEWS_API_KEY")
+    api_key = st.secrets["NEWS_API_KEY"]
+    
     newsapi = NewsApiClient(api_key=api_key)
 
     # lowercase query
