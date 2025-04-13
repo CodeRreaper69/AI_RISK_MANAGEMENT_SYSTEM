@@ -381,7 +381,7 @@ def main():
 
         # Add to the dashboard section
         if st.button("Refresh Dashboard"):
-            df_projects = generate_dynamic_dashboard_values()
+            df_projects = generate_dynamic_dashboard_values(df_projects)
             st.rerun()
         # Overview Dashboard
         st.title("📊 Project Risk Dashboard")
