@@ -10,7 +10,7 @@ import streamlit as st
 load_dotenv()
 
 
-def fetch_news(query,limit = 5):
+def fetch_news(query, limit=5):
     # api_key = os.getenv("NEWS_API_KEY")
     api_key = st.secrets["NEWS_API_KEY"]
     
@@ -19,12 +19,29 @@ def fetch_news(query,limit = 5):
     # lowercase query
     query = query.lower()
 
-    all_articles = newsapi.get_everything(q=query,
-                                          language='en',
-                                          sort_by='relevancy',
-                                          page=2)
+    all_articles = newsapi.get_everything(
+                                        q=query,
+                                        language='en',
+                                        sort_by='relevancy',
+                                        page=1,
+                                        page_size=8  # Fetch only top 5 results from API
+                                    )
 
-    return all_articles['articles'][:limit]
+
+    # Offensive keywords to filter out
+    offensive_keywords = {"sex", "porn", "violence", "drugs", "gambling", "nudity", "explicit"}
+
+    # Filter articles
+    filtered_articles = []
+    for article in all_articles['articles']:
+        content = (article.get("title", "") + " " + article.get("description", "")).lower()
+        if not any(off_word in content for off_word in offensive_keywords):
+            filtered_articles.append(article)
+        if len(filtered_articles) >= limit:
+            break  # Stop after collecting the desired number of articles
+
+    return filtered_articles
+
 
 def generate_query(model, headline):
     """
