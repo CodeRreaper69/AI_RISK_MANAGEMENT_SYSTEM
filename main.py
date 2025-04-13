@@ -248,14 +248,17 @@ def query_gemini(model, query, project_data_context, chat_history=None):
     except Exception as e:
         return f"Error querying Gemini: {e}"
 
-def generate_dynamic_dashboard_values():
+def generate_dynamic_dashboard_values(df_projects):
     """Generate random risk scores and update dashboard metrics"""
+    # Make a copy to avoid modifying the original unexpectedly
+    df = df_projects.copy()
+    
     # Randomly assign risk levels to projects
     risk_levels = ["High", "Medium", "Low"]
     risk_weights = [0.2, 0.5, 0.3]  # 20% high, 50% medium, 30% low
     
     # Update risk scores with random values
-    for idx, row in df_projects.iterrows():
+    for idx, row in df.iterrows():
         # Generate a random risk score (20-90)
         base_risk = random.randint(20, 90)
         
@@ -274,24 +277,28 @@ def generate_dynamic_dashboard_values():
             risk_level = "Low"
         
         # Update the dataframe
-        df_projects.at[idx, "risk_score"] = base_risk
-        df_projects.at[idx, "market_risk"] = market_impact
-        df_projects.at[idx, "final_risk_score"] = final_score
-        df_projects.at[idx, "final_risk_level"] = risk_level
+        df.at[idx, "risk_score"] = base_risk
+        df.at[idx, "market_risk"] = market_impact
+        df.at[idx, "final_risk_score"] = final_score
+        df.at[idx, "final_risk_level"] = risk_level
         
-    return df_projects
+    return df
 # Main Streamlit UI
 def main():
 
     # Initialize Gemini model
     gemini_model = initialize_gemini()
 
-    # Load sample data if live news does not works
+    # Load sample data if live news does not work
     df_projects = load_sample_project_data()
+    
     # Generate dynamic values for the dashboard
     if 'last_refresh' not in st.session_state or (datetime.datetime.now() - st.session_state.last_refresh).seconds > 30:
-        df_projects = generate_dynamic_dashboard_values()
+        df_projects = generate_dynamic_dashboard_values(df_projects)
         st.session_state.last_refresh = datetime.datetime.now()
+    
+# Calculate additional metrics
+df_projects['budget_variance'] = ((df_projects['spent'] / df_projects['budget']) - 1) * 100
 
     
     news_data = load_sample_news_data()
