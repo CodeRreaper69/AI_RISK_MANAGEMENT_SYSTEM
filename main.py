@@ -12,6 +12,7 @@ import google.generativeai as genai
 from textblob import TextBlob
 from dotenv import load_dotenv
 import random
+import time
 
 from utils.utils import market_impact_on_project, create_master_news_list
 from utils.risk_tools import calculate_risk_score, get_risk_level, project_risk_summary, create_project_metrics_table, create_risk_factors_chart, format_published_date, create_risk_gauge
@@ -284,6 +285,63 @@ def generate_dynamic_dashboard_values(df_projects):
         df.at[idx, "final_risk_level"] = risk_level
         
     return df
+
+def simulate_project_scraping(df_projects):
+    """Simulate real-time scraping of project data with progress tracking"""
+    # Create a progress bar
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+    
+    # Create a placeholder for showing the "scraped" data
+    data_placeholder = st.empty()
+    
+    # Loop through projects to simulate scraping
+    total_projects = len(df_projects)
+    updated_df = df_projects.copy()
+    
+    for i, (idx, project) in enumerate(df_projects.iterrows()):
+        # Update progress
+        progress = int(100 * (i + 1) / total_projects)
+        progress_bar.progress(progress)
+        
+        # Display status message
+        status_text.text(f"Scraping data for project: {project['project']} ({i+1}/{total_projects})")
+        
+        # Simulate processing time
+        time.sleep(0.5)  # Adjust this for faster/slower simulation
+        
+        # Generate random updated metrics for this project
+        updated_df.at[idx, "risk_score"] = random.randint(20, 90)
+        updated_df.at[idx, "market_risk"] = random.uniform(-15, 15)
+        final_score = min(100, max(10, updated_df.at[idx, "risk_score"] + updated_df.at[idx, "market_risk"]))
+        updated_df.at[idx, "final_risk_score"] = final_score
+        
+        # Determine risk level based on score
+        if final_score >= HIGH_RISK_THRESHOLD:
+            risk_level = "High"
+        elif final_score >= MEDIUM_RISK_THRESHOLD:
+            risk_level = "Medium"
+        else:
+            risk_level = "Low"
+        updated_df.at[idx, "final_risk_level"] = risk_level
+        
+        # Show the data being scraped in real-time
+        with data_placeholder.container():
+            st.subheader("Live Data Feed")
+            st.dataframe(updated_df.iloc[0:i+1, :][["project", "risk_score", "market_risk", "final_risk_score", "final_risk_level"]])
+    
+    # Complete the progress
+    status_text.text("Project data scraping complete!")
+    
+    # Wait a moment before clearing
+    time.sleep(1)
+    
+    # Clear the temporary UI elements
+    progress_bar.empty()
+    status_text.empty()
+    data_placeholder.empty()
+    
+    return updated_df
 # Main Streamlit UI
 def main():
 
@@ -380,12 +438,34 @@ def main():
     # Main content area
     if page == "Dashboard":
 
-        # Add to the dashboard section
-        if st.button("Refresh Dashboard"):
-            df_projects = generate_dynamic_dashboard_values(df_projects)
-            st.rerun()
+        try:
+            # Add to the dashboard section
+            if st.button("Refresh Dashboard"):
+                df_projects = generate_dynamic_dashboard_values(df_projects)
+                st.rerun()
+        except:
+            st.toast("Could not refresh, try again after sometime!")
         # Overview Dashboard
         st.title("📊 Project Risk Dashboard")
+
+        try:
+            # Add a button to refresh data with "scraping"
+            if st.button("🔄 Refresh Projects Data (Live)"):
+                with st.spinner("Connecting to project sources..."):
+                    time.sleep(1)  # Simulate initial connection
+                
+                # Run the simulated scraping process
+                df_projects = simulate_project_scraping(df_projects)
+                
+                # Recalculate additional metrics
+                df_projects['budget_variance'] = ((df_projects['spent'] / df_projects['budget']) - 1) * 100
+                
+                # Add to session state if needed
+                st.session_state.last_refresh = datetime.datetime.now()
+                
+                st.success("Project data successfully updated!")
+        except:
+            st.toast("Could not connect to Project API!, Try to refresh")
         
         # Key metrics row
         col1, col2, col3, col4 = st.columns(4)
