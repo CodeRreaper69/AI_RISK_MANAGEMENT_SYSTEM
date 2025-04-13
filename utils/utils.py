@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import json
 from textblob import TextBlob
 import google.generativeai as genai
+import streamlit as st
 
 # Init
 load_dotenv()
