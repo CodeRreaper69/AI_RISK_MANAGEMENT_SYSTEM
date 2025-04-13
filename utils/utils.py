@@ -66,8 +66,8 @@ def fetch_news(query, limit=5):
                 q=query,
                 language='en',
                 sort_by='relevancy',
-                page=1,
-                page_size=8  # Fetch a few more to allow for filtering
+                page=2,
+                page_size=20  # Fetch a few more to allow for filtering
             )
 
             # Filter articles
