@@ -10,7 +10,7 @@ import streamlit as st
 load_dotenv()
 
 
-def fetch_news(query):
+def fetch_news(query,limit = 5):
     # api_key = os.getenv("NEWS_API_KEY")
     api_key = st.secrets["NEWS_API_KEY"]
     
@@ -24,7 +24,7 @@ def fetch_news(query):
                                           sort_by='relevancy',
                                           page=2)
 
-    return all_articles['articles']
+    return all_articles['articles'][:limit]
 
 def generate_query(model, headline):
     """
