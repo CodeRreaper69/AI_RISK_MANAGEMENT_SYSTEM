@@ -146,6 +146,40 @@ def load_sample_project_data():
         df.to_csv("project_data.csv", index=False)
         return df
 
+
+def generate_dynamic_dashboard_values():
+    """Generate random risk scores and update dashboard metrics"""
+    # Randomly assign risk levels to projects
+    risk_levels = ["High", "Medium", "Low"]
+    risk_weights = [0.2, 0.5, 0.3]  # 20% high, 50% medium, 30% low
+    
+    # Update risk scores with random values
+    for idx, row in df_projects.iterrows():
+        # Generate a random risk score (20-90)
+        base_risk = random.randint(20, 90)
+        
+        # Add market impact (±15 points)
+        market_impact = random.uniform(-15, 15)
+        
+        # Calculate final risk score
+        final_score = min(100, max(10, base_risk + market_impact))
+        
+        # Determine risk level based on score
+        if final_score >= HIGH_RISK_THRESHOLD:
+            risk_level = "High"
+        elif final_score >= MEDIUM_RISK_THRESHOLD:
+            risk_level = "Medium"
+        else:
+            risk_level = "Low"
+        
+        # Update the dataframe
+        df_projects.at[idx, "risk_score"] = base_risk
+        df_projects.at[idx, "market_risk"] = market_impact
+        df_projects.at[idx, "final_risk_score"] = final_score
+        df_projects.at[idx, "final_risk_level"] = risk_level
+        
+    return df_projects
+    
 def load_sample_news_data():
     """Load or generate sample market news data"""
     try:
@@ -257,6 +291,12 @@ def main():
 
     # Load sample data if live news does not works
     df_projects = load_sample_project_data()
+    # Generate dynamic values for the dashboard
+    if 'last_refresh' not in st.session_state or (datetime.datetime.now() - st.session_state.last_refresh).seconds > 30:
+        df_projects = generate_dynamic_dashboard_values()
+        st.session_state.last_refresh = datetime.datetime.now()
+
+    
     news_data = load_sample_news_data()
     
     # Calculate additional metrics
@@ -334,6 +374,11 @@ def main():
     
     # Main content area
     if page == "Dashboard":
+
+        # Add to the dashboard section
+        if st.button("Refresh Dashboard"):
+            df_projects = generate_dynamic_dashboard_values()
+            st.rerun()
         # Overview Dashboard
         st.title("📊 Project Risk Dashboard")
         
