@@ -685,78 +685,80 @@ def main():
     elif page == "AI Chatbot":
         # Chatbot page
         st.title("🤖 AI Risk Management Assistant")
-        
-        # API key check
-        if not gemini_model:
-            st.warning("Please enter your Gemini API key in the sidebar to use the AI assistant.")
-            st.info("You can get a Gemini API key from https://ai.google.dev/")
-        else:
-            # Prepare project context for the AI
-            project_context = f"""
-            Current Project: {project_data['project']} (Client: {project_data['client']})
-            Project Type: {project_data['project_type']}
-            Risk Score: {project_data['final_risk_score']:.1f}/100 ({project_data['final_risk_level']} Risk)
-            Key Metrics:
-            - Schedule: {project_data['delay_days']} days delay
-            - Payment Status: {project_data['payment_status']}
-            - Team Resignations: {project_data['resignations']}
-            - Budget Variance: {((project_data['spent'] / project_data['budget']) - 1) * 100:.1f}%
-            - Completion: {project_data['completion']}%
-            
-            All Projects Summary:
-            - High Risk Projects: {len(df_projects[df_projects["final_risk_level"] == "High"])}
-            - Medium Risk Projects: {len(df_projects[df_projects["final_risk_level"] == "Medium"])}
-            - Low Risk Projects: {len(df_projects[df_projects["final_risk_level"] == "Low"])}
-            """
-            
-            # Display chat interface
-            st.subheader(f"Ask about risks for: {project_data['project']}")
-            
-            # Display chat history
-            for question, answer in st.session_state.chat_history:
-                st.info(f"You: {question}")
-                st.success(f"AI Assistant: {answer}")
-            
-            # Chat input
-            user_query = st.text_input(
-                "Ask a question about project risks:", 
-                placeholder="E.g., What's the biggest risk for this project? Or, How can we mitigate the schedule delay?"
-            )
-            
-            # Sample questions
-            with st.expander("Sample questions to ask"):
-                st.markdown("""
-                - What are the main risk factors for this project?
-                - How is the market affecting our project risk?
-                - What mitigation strategies do you recommend?
-                - How can we address the resource issues?
-                - Which projects in our portfolio need immediate attention?
-                - How can we improve our payment situation?
-                - What's the trend of our schedule performance?
-                - Compare the risk level with other similar projects
-                """)
-            
-            # Process query
-            if user_query:
-                with st.spinner("Analyzing project data and generating response..."):
-                    response = query_gemini(
-                        gemini_model, 
-                        user_query, 
-                        project_context, 
-                        st.session_state.chat_history
-                    )
-                    
-                    # Add to chat history
-                    st.session_state.chat_history.append((user_query, response))
-                    
-                    # Display latest response
-                    st.info(f"You: {user_query}")
-                    st.success(f"AI Assistant: {response}")
-            
-            # Clear chat button
-            if st.button("Clear Chat History") and st.session_state.chat_history:
-                st.session_state.chat_history = []
-                st.experimental_rerun()
+        try:
+            # # API key check
+            if not gemini_model:
+                st.warning("Please enter your Gemini API key in the sidebar to use the AI assistant.")
+                st.info("You can get a Gemini API key from https://ai.google.dev/")
+            else:
+                # Prepare project context for the AI
+                project_context = f"""
+                Current Project: {project_data['project']} (Client: {project_data['client']})
+                Project Type: {project_data['project_type']}
+                Risk Score: {project_data['final_risk_score']:.1f}/100 ({project_data['final_risk_level']} Risk)
+                Key Metrics:
+                - Schedule: {project_data['delay_days']} days delay
+                - Payment Status: {project_data['payment_status']}
+                - Team Resignations: {project_data['resignations']}
+                - Budget Variance: {((project_data['spent'] / project_data['budget']) - 1) * 100:.1f}%
+                - Completion: {project_data['completion']}%
+                
+                All Projects Summary:
+                - High Risk Projects: {len(df_projects[df_projects["final_risk_level"] == "High"])}
+                - Medium Risk Projects: {len(df_projects[df_projects["final_risk_level"] == "Medium"])}
+                - Low Risk Projects: {len(df_projects[df_projects["final_risk_level"] == "Low"])}
+                """
+                
+                # Display chat interface
+                st.subheader(f"Ask about risks for: {project_data['project']}")
+                
+                # Display chat history
+                for question, answer in st.session_state.chat_history:
+                    st.info(f"You: {question}")
+                    st.success(f"AI Assistant: {answer}")
+                
+                # Chat input
+                user_query = st.text_input(
+                    "Ask a question about project risks:", 
+                    placeholder="E.g., What's the biggest risk for this project? Or, How can we mitigate the schedule delay?"
+                )
+                
+                # Sample questions
+                with st.expander("Sample questions to ask"):
+                    st.markdown("""
+                    - What are the main risk factors for this project?
+                    - How is the market affecting our project risk?
+                    - What mitigation strategies do you recommend?
+                    - How can we address the resource issues?
+                    - Which projects in our portfolio need immediate attention?
+                    - How can we improve our payment situation?
+                    - What's the trend of our schedule performance?
+                    - Compare the risk level with other similar projects
+                    """)
+                
+                # Process query
+                if user_query:
+                    with st.spinner("Analyzing project data and generating response..."):
+                        response = query_gemini(
+                            gemini_model, 
+                            user_query, 
+                            project_context, 
+                            st.session_state.chat_history
+                        )
+                        
+                        # Add to chat history
+                        st.session_state.chat_history.append((user_query, response))
+                        
+                        # Display latest response
+                        st.info(f"You: {user_query}")
+                        st.success(f"AI Assistant: {response}")
+                
+                # Clear chat button
+                if st.button("Clear Chat History") and st.session_state.chat_history:
+                    st.session_state.chat_history = []
+                    st.rerun()
+        except:
+            st.markdown("Some problems loading, try again later!")
 
 if __name__ == "__main__":
     main()
