@@ -215,6 +215,9 @@ def query_gemini(model, query, project_data_context, chat_history=None):
         
         Please analyze this data when answering questions. Be specific, practical and concise in your answers.
         Focus on risk identification, assessment, and mitigation strategies.
+        You do not take any other topic as discussion
+        Stick to the project risk management
+        Project risk analysis only
         """
         
         # If we have chat history, use it for context
