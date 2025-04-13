@@ -1,17 +1,20 @@
-from newsapi import NewsApiClient
-import os
-from dotenv import load_dotenv
-import json
-from textblob import TextBlob
-import google.generativeai as genai
-import streamlit as st
-from typing import List, Dict, Any, Optional
-import time
-import re
-import numpy as np
-import uuid
-import hashlib
-from datetime import datetime
+try:
+    from newsapi import NewsApiClient
+    import os
+    from dotenv import load_dotenv
+    import json
+    from textblob import TextBlob
+    import google.generativeai as genai
+    import streamlit as st
+    from typing import List, Dict, Any, Optional
+    import time
+    import re
+    import numpy as np
+    import uuid
+    import hashlib
+    from datetime import datetime
+except:
+    pass
 
 # Import libraries for LangChain
 try:
