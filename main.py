@@ -490,7 +490,54 @@ def main():
             st.subheader(f"News Related to: {st.session_state.selected_project}")
             
             if not project_news:
-                st.info(f"No news found for {st.session_state.selected_project}. Try selecting another project.")
+                fallback_news = load_sample_news_data()
+        
+                # Process fallback news to match the expected format
+                processed_fallback_news = []
+                for news in fallback_news:
+                    # Calculate sentiment using TextBlob
+                    sentiment = TextBlob(news["content"]).sentiment.polarity
+                    sentiment_label = "Positive" if sentiment > 0.05 else "Negative" if sentiment < -0.05 else "Neutral"
+                    
+                    processed_news = {
+                        "title": news["title"],
+                        "content": news["content"],
+                        "publishedAt": news["date"],
+                        "source": {"name": news["source"]},
+                        "sentiment": sentiment,
+                        "sentiment_label": sentiment_label
+                    }
+                    processed_fallback_news.append(processed_news)
+                
+                # Display fallback news
+                st.warning("Using sample news data as no specific news found for this project.")
+                
+                # Calculate average sentiment for fallback news
+                avg_sentiment = sum(n["sentiment"] for n in processed_fallback_news) / len(processed_fallback_news)
+                sentiment_status = "Positive" if avg_sentiment > 0.05 else "Negative" if avg_sentiment < -0.05 else "Neutral"
+                sentiment_color = "#00CC96" if avg_sentiment > 0.05 else "#FF4B4B" if avg_sentiment < -0.05 else "#FFA500"
+                
+                # Display sentiment summary for fallback news
+                st.metric(
+                    "Overall Market Sentiment (Sample Data)", 
+                    sentiment_status, 
+                    f"{avg_sentiment:.2f}", 
+                    delta_color="normal" if sentiment_status == "Positive" else "inverse"
+                )
+                
+                # Display fallback news
+                for news in processed_fallback_news:
+                    formatted_date = format_published_date(news.get("publishedAt", "Unknown date"))
+                    
+                    with st.expander(f"{news.get('title', 'No title')} ({formatted_date})"):
+                        st.write(news.get("content", "No content available"))
+                        st.caption(f"Source: {news.get('source', {}).get('name', 'Unknown source')}")
+                        st.metric(
+                            "Sentiment", 
+                            news["sentiment_label"], 
+                            f"{news['sentiment']:.2f}"
+                        )
+                        st.info(f"No news found for {st.session_state.selected_project}. Try selecting another project.")
             else:
                 # Calculate average sentiment for this project
                 avg_sentiment = sum(n["sentiment"] for n in project_news) / len(project_news)
