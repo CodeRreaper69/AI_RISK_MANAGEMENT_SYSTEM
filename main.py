@@ -184,7 +184,8 @@ def initialize_gemini():
     """Initialize the Gemini model"""
     try:
         # Check if API key is in environment variables
-        api_key = os.getenv("GEMINI_API_KEY")
+        # api_key = os.getenv("GEMINI_API_KEY")
+        api_key = st.secrets["GEMINI_API_KEY"]
         
         # If not found in environment, try to get from session state
         if not api_key and "gemini_api_key" in st.session_state:
