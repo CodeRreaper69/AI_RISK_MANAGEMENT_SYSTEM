@@ -4,3 +4,5 @@ plotly
 textblob
 streamlit
 requests
+python-dotenv
+newsapi-python

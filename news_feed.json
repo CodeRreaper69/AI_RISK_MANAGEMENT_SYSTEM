@@ -1,1 +1,32 @@
-[{"title": "Tech Sector Faces Economic Slowdown", "content": "Analysts predict a significant slowdown in tech spending as companies tighten budgets amid economic uncertainty.", "date": "2025-04-09", "source": "Tech Insights"}, {"title": "Cloud Computing Demand Still Strong", "content": "Despite economic headwinds, cloud service providers report continued growth as businesses accelerate digital transformation.", "date": "2025-04-07", "source": "Cloud Industry Review"}, {"title": "Cybersecurity Skills Shortage Worsens", "content": "The gap between cybersecurity job openings and qualified professionals continues to widen, driving up hiring costs.", "date": "2025-04-10", "source": "Security Weekly"}, {"title": "Supply Chain Issues Impact Hardware Delivery", "content": "Global supply chain disruptions continue to delay hardware deliveries for IT infrastructure projects worldwide.", "date": "2025-04-06", "source": "Supply Chain Monitor"}, {"title": "AI Development Costs on the Rise", "content": "Companies implementing AI solutions report higher than expected costs due to computing resources and talent acquisition.", "date": "2025-04-08", "source": "AI Industry Today"}]
+[
+    {
+        "title": "Tech Sector Faces Economic Slowdown",
+        "content": "Analysts predict a significant slowdown in tech spending as companies tighten budgets amid economic uncertainty.",
+        "date": "2025-04-09",
+        "source": "Tech Insights"
+    },
+    {
+        "title": "Cloud Computing Demand Still Strong",
+        "content": "Despite economic headwinds, cloud service providers report continued growth as businesses accelerate digital transformation.",
+        "date": "2025-04-07",
+        "source": "Cloud Industry Review"
+    },
+    {
+        "title": "Cybersecurity Skills Shortage Worsens",
+        "content": "The gap between cybersecurity job openings and qualified professionals continues to widen, driving up hiring costs.",
+        "date": "2025-04-10",
+        "source": "Security Weekly"
+    },
+    {
+        "title": "Supply Chain Issues Impact Hardware Delivery",
+        "content": "Global supply chain disruptions continue to delay hardware deliveries for IT infrastructure projects worldwide.",
+        "date": "2025-04-06",
+        "source": "Supply Chain Monitor"
+    },
+    {
+        "title": "AI Development Costs on the Rise",
+        "content": "Companies implementing AI solutions report higher than expected costs due to computing resources and talent acquisition.",
+        "date": "2025-04-08",
+        "source": "AI Industry Today"
+    }
+]

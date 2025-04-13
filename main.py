@@ -12,6 +12,9 @@ import google.generativeai as genai
 from textblob import TextBlob
 from dotenv import load_dotenv
 
+from utils.utils import market_impact_on_project, create_master_news_list
+from utils.risk_tools import calculate_risk_score, get_risk_level, project_risk_summary, create_project_metrics_table, create_risk_factors_chart, format_published_date, create_risk_gauge
+
 load_dotenv()
 
 
@@ -32,75 +35,6 @@ if 'chat_history' not in st.session_state:
 if 'selected_project' not in st.session_state:
     st.session_state.selected_project = None
 
-# Helper functions for risk scoring
-def calculate_risk_score(delay_days, payment_status, resignations):
-    """Calculate risk score based on project metrics"""
-    score = 0
-    
-    # Schedule delay impact
-    if delay_days <= 5:
-        score += delay_days * 2  # 2 points per day for small delays
-    elif 5 < delay_days <= 15:
-        score += 10 + (delay_days - 5) * 3  # Higher penalty for medium delays
-    else:
-        score += 40  # Maximum penalty for severe delays
-    
-    # Payment issues
-    if payment_status == "Late":
-        score += 15
-    elif payment_status == "Missed":
-        score += 30
-    
-    # Resource issues - resignations
-    if resignations == 1:
-        score += 15
-    elif resignations > 1:
-        score += 15 + (resignations - 1) * 10  # Each additional resignation adds 10 points
-        
-    return min(score, 100)  # Cap at 100
-
-def get_risk_level(score):
-    """Convert numerical score to categorical risk level"""
-    if score >= HIGH_RISK_THRESHOLD:
-        return "High"
-    elif score >= MEDIUM_RISK_THRESHOLD:
-        return "Medium"
-    else:
-        return "Low"
-
-def get_risk_color(score):
-    """Get color for risk visualization"""
-    if score >= HIGH_RISK_THRESHOLD:
-        return "#FF4B4B"  # Red
-    elif score >= MEDIUM_RISK_THRESHOLD:
-        return "#FFA500"  # Orange
-    else:
-        return "#00CC96"  # Green
-
-# Market Analysis functions
-def analyze_news_sentiment(news_text):
-    """Analyze sentiment of news text"""
-    blob = TextBlob(news_text)
-    return blob.sentiment.polarity  # -1 to 1 (negative to positive)
-
-def market_impact_on_project(project_type, sentiment_score):
-    """Calculate market impact on project based on sentiment and project type"""
-    # Different project types have different sensitivity to market sentiment
-    sensitivity = {
-        "Software Development": 0.4,
-        "Infrastructure": 0.7,
-        "Consulting": 0.6,
-        "Maintenance": 0.3,
-        "Research": 0.5
-    }
-    
-    project_sensitivity = sensitivity.get(project_type, 0.5)
-    # Convert sentiment (-1 to 1) to risk impact (0 to 30)
-    # Negative sentiment increases risk, positive sentiment decreases risk
-    impact = ((-sentiment_score) * project_sensitivity) * 30
-    
-    # Ensure impact is between 0 and 30
-    return max(0, min(30, impact))
 
 # Generate sample data
 def load_sample_project_data():
@@ -202,7 +136,7 @@ def load_sample_news_data():
     """Load or generate sample market news data"""
     try:
         # Try to load existing data
-        with open("news_feed.json", "r") as f:
+        with open("dummy.json", "r") as f:
             return json.load(f)
     except:
         # Generate new sample news data
@@ -296,150 +230,37 @@ def query_gemini(model, query, project_data_context, chat_history=None):
     except Exception as e:
         return f"Error querying Gemini: {e}"
 
-# Custom functions for reporting and dashboards
-def create_risk_gauge(score, title="Overall Risk Score"):
-    """Create a risk gauge chart"""
-    fig = go.Figure(go.Indicator(
-        mode="gauge+number",
-        value=score,
-        domain={'x': [0, 1], 'y': [0, 1]},
-        title={'text': title},
-        gauge={
-            'axis': {'range': [0, 100]},
-            'bar': {'color': get_risk_color(score)},
-            'steps': [
-                {'range': [0, MEDIUM_RISK_THRESHOLD], 'color': "rgba(0, 204, 150, 0.3)"},
-                {'range': [MEDIUM_RISK_THRESHOLD, HIGH_RISK_THRESHOLD], 'color': "rgba(255, 165, 0, 0.3)"},
-                {'range': [HIGH_RISK_THRESHOLD, 100], 'color': "rgba(255, 75, 75, 0.3)"}
-            ],
-            'threshold': {
-                'line': {'color': "red", 'width': 4},
-                'thickness': 0.75,
-                'value': HIGH_RISK_THRESHOLD
-            }
-        }
-    ))
-    
-    fig.update_layout(height=250, margin=dict(l=20, r=20, t=50, b=20))
-    return fig
-
-def create_risk_factors_chart(project_data):
-    """Create a risk factor breakdown chart"""
-    # Calculate risk components
-    delay_risk = min(40, project_data['delay_days'] * 2 if project_data['delay_days'] <= 5 
-                    else 10 + (project_data['delay_days'] - 5) * 3 if project_data['delay_days'] <= 15
-                    else 40)
-    
-    payment_risk = 0
-    if project_data['payment_status'] == "Late":
-        payment_risk = 15
-    elif project_data['payment_status'] == "Missed":
-        payment_risk = 30
-        
-    resource_risk = 15 if project_data['resignations'] == 1 else 15 + (project_data['resignations'] - 1) * 10 if project_data['resignations'] > 1 else 0
-    resource_risk = min(30, resource_risk)
-    
-    # Create bar chart
-    categories = ['Schedule Risk', 'Payment Risk', 'Resource Risk']
-    values = [delay_risk, payment_risk, resource_risk]
-    colors = ["#FF9966", "#6699FF", "#99FF99"]
-    
-    fig = go.Figure(go.Bar(
-        x=categories,
-        y=values,
-        text=values,
-        textposition='auto',
-        marker_color=colors
-    ))
-    
-    fig.update_layout(
-        title="Risk Factor Breakdown",
-        yaxis=dict(title="Risk Impact", range=[0, 50]),
-        height=300,
-        margin=dict(l=20, r=20, t=50, b=20)
-    )
-    
-    return fig
-
-def create_project_metrics_table(project_data):
-    """Create a table of key project metrics"""
-    metrics = {
-        "Start Date": project_data["start_date"],
-        "Deadline": project_data["deadline"],
-        "Budget": f"${project_data['budget']:,}",
-        "Spent": f"${project_data['spent']:.2f}",
-        "Budget Variance": f"{((project_data['spent'] / project_data['budget']) - 1) * 100:.1f}%",
-        "Completion": f"{project_data['completion']}%",
-        "Team Size": f"{project_data['team_size']} members",
-        "Delay": f"{project_data['delay_days']} days",
-        "Payment Status": project_data["payment_status"],
-        "Resignations": f"{project_data['resignations']} people"
-    }
-    
-    return metrics
-
-def project_risk_summary(project_data):
-    """Generate a risk summary for a project"""
-    risk_level = project_data["risk_level"]
-    risk_score = project_data["risk_score"]
-    
-    summary = f"**Risk Level: {risk_level}** (Score: {risk_score}/100)\n\n"
-    
-    # Add specific risk factors
-    if project_data["delay_days"] > 10:
-        summary += "• **Critical Schedule Risk**: Project is significantly behind schedule.\n"
-    elif project_data["delay_days"] > 5:
-        summary += "• **Moderate Schedule Risk**: Project is somewhat behind schedule.\n"
-    
-    if project_data["payment_status"] == "Missed":
-        summary += "• **Critical Payment Risk**: Client has missed payments.\n"
-    elif project_data["payment_status"] == "Late":
-        summary += "• **Payment Concern**: Client payments are delayed.\n"
-    
-    if project_data["resignations"] > 1:
-        summary += f"• **Critical Resource Risk**: Multiple team members ({project_data['resignations']}) have resigned.\n"
-    elif project_data["resignations"] == 1:
-        summary += "• **Resource Concern**: One team member has resigned.\n"
-    
-    if project_data["spent"] > project_data["budget"]:
-        overspent = ((project_data["spent"] / project_data["budget"]) - 1) * 100
-        summary += f"• **Budget Risk**: Project is {overspent:.1f}% over budget.\n"
-    
-    # Suggest mitigation strategies
-    summary += "\n**Recommended Actions**:\n"
-    
-    if project_data["delay_days"] > 5:
-        summary += "• Review project timeline and consider scope adjustments\n"
-        
-    if project_data["payment_status"] != "On Time":
-        summary += "• Escalate payment issues to account management\n"
-        
-    if project_data["resignations"] > 0:
-        summary += "• Accelerate hiring process and redistribute workload\n"
-        
-    if project_data["spent"] > project_data["budget"]:
-        summary += "• Conduct budget review and implement cost controls\n"
-    
-    return summary
 
 # Main Streamlit UI
 def main():
+
+    # Initialize Gemini model
+    gemini_model = initialize_gemini()
+
     # Load sample data
     df_projects = load_sample_project_data()
-    news_data = load_sample_news_data()
     
     # Calculate additional metrics
     df_projects['budget_variance'] = ((df_projects['spent'] / df_projects['budget']) - 1) * 100
     
-    # Add market risk based on news sentiment
-    for i, news in enumerate(news_data):
-        news["sentiment"] = analyze_news_sentiment(news["content"])
-        news["sentiment_label"] = "Positive" if news["sentiment"] > 0.05 else "Negative" if news["sentiment"] < -0.05 else "Neutral"
+    # Check if master news list is already in session state
+    if 'master_news' not in st.session_state:
+        # Create master news list for all projects
+        with st.spinner("Fetching news data for all projects...It may take a few seconds."):
+            st.session_state.master_news = create_master_news_list(df_projects, gemini_model)
     
     # Update risk scores with external factors (market risk)
     for idx, row in df_projects.iterrows():
-        # Calculate average sentiment across all news
-        avg_sentiment = sum(n["sentiment"] for n in news_data) / len(news_data)
+        project_name = row["project"]
+        
+        # Get news for this project
+        project_news = st.session_state.master_news.get(project_name, [])
+        
+        # Calculate average sentiment across project news
+        if project_news:
+            avg_sentiment = sum(n["sentiment"] for n in project_news) / len(project_news)
+        else:
+            avg_sentiment = 0.0  # Neutral if no news
         
         # Add market impact to risk score
         market_risk = market_impact_on_project(row["project_type"], avg_sentiment)
@@ -449,9 +270,6 @@ def main():
         df_projects.at[idx, "market_risk"] = market_risk
         df_projects.at[idx, "final_risk_score"] = updated_risk_score
         df_projects.at[idx, "final_risk_level"] = get_risk_level(updated_risk_score)
-    
-    # Initialize Gemini model
-    gemini_model = initialize_gemini()
     
     # Sidebar
     with st.sidebar:
@@ -489,6 +307,7 @@ def main():
                     
     # Get selected project data
     project_data = df_projects[df_projects["project"] == st.session_state.selected_project].iloc[0].to_dict()
+
     
     # Main content area
     if page == "Dashboard":
@@ -649,27 +468,92 @@ def main():
                      delta=f"{remaining_days - project_data['delay_days']} adjusted")
     
     elif page == "Market Analysis":
-        # Market Analysis Page
+        # Market Analysis Page (modified)
         st.title("📰 Market Risk Analysis")
         
-        # News feed
-        st.subheader("Recent Market News")
+        # News feed - Show news for selected project
+        project_news = st.session_state.master_news.get(st.session_state.selected_project, [])
         
-        for news in news_data:
-            sentiment_color = "#00CC96" if news["sentiment"] > 0.05 else "#FF4B4B" if news["sentiment"] < -0.05 else "#FFA500"
+        # Add a tab for All News and Project-specific News
+        tab1, tab2 = st.tabs(["Project News", "All Market News"])
+        
+        with tab1:
+            st.subheader(f"News Related to: {st.session_state.selected_project}")
             
-            with st.expander(f"{news['title']} ({news['date']})"):
-                st.write(news["content"])
-                st.caption(f"Source: {news['source']}")
-                st.metric("Sentiment", news["sentiment_label"], f"{news['sentiment']:.2f}")
+            if not project_news:
+                st.info(f"No news found for {st.session_state.selected_project}. Try selecting another project.")
+            else:
+                # Calculate average sentiment for this project
+                avg_sentiment = sum(n["sentiment"] for n in project_news) / len(project_news)
+                sentiment_status = "Positive" if avg_sentiment > 0.05 else "Negative" if avg_sentiment < -0.05 else "Neutral"
+                sentiment_color = "#00CC96" if avg_sentiment > 0.05 else "#FF4B4B" if avg_sentiment < -0.05 else "#FFA500"
+                
+                # Display project sentiment summary
+                st.metric(
+                    "Overall Market Sentiment", 
+                    sentiment_status, 
+                    f"{avg_sentiment:.2f}", 
+                    delta_color="normal" if sentiment_status == "Positive" else "inverse"
+                )
+                
+                # Display project news
+                for news in project_news:
+                    formatted_date = format_published_date(news.get("publishedAt", "Unknown date"))
+                    
+                    with st.expander(f"{news.get('title', 'No title')} ({formatted_date})"):
+                        st.write(news.get("content", "No content available"))
+                        st.caption(f"Source: {news.get('source', {}).get('name', 'Unknown source')}")
+                        st.metric(
+                            "Sentiment", 
+                            news["sentiment_label"], 
+                            f"{news['sentiment']:.2f}"
+                        )
         
-        # Market impact on projects
+        with tab2:
+            st.subheader("All Market News")
+            
+            # Flatten all news articles from all projects
+            all_news = []
+            for news_list in st.session_state.master_news.values():
+                all_news.extend(news_list)
+            
+            # Remove duplicates based on title
+            unique_news = {}
+            for news in all_news:
+                if news.get("title") not in unique_news:
+                    unique_news[news.get("title")] = news
+            
+            all_news = list(unique_news.values())
+            
+            # Sort by date (newest first)
+            all_news = sorted(
+                all_news, 
+                key=lambda x: x.get("publishedAt", ""), 
+                reverse=True
+            )
+            
+            for news in all_news:
+                formatted_date = format_published_date(news.get("publishedAt", "Unknown date"))
+                
+                with st.expander(f"{news.get('title', 'No title')} ({formatted_date})"):
+                    st.write(news.get("content", "No content available"))
+                    st.caption(f"Source: {news.get('source', {}).get('name', 'Unknown source')}")
+                    st.metric(
+                        "Sentiment", 
+                        news["sentiment_label"], 
+                        f"{news['sentiment']:.2f}"
+                    )
+        
+        # Market impact on projects (rest of the code remains the same)
         st.divider()
         st.subheader("Market Impact on Projects")
         
         # Prepare data
         market_impact_data = df_projects[["project", "project_type", "risk_score", "market_risk", "final_risk_score"]]
         market_impact_data = market_impact_data.sort_values("market_risk", ascending=False)
+        
+        # Highlight selected project
+        market_impact_data["is_selected"] = market_impact_data["project"] == st.session_state.selected_project
         
         # Market impact chart
         fig = px.bar(market_impact_data,
@@ -678,6 +562,21 @@ def main():
                      labels={"value": "Risk Score", "variable": "Risk Component"},
                      title="Base Risk vs. Market-Added Risk",
                      color_discrete_map={"risk_score": "#4B9CD3", "market_risk": "#FF4B4B"})
+        
+        # Highlight selected project with a box
+        if st.session_state.selected_project:
+            selected_idx = market_impact_data[market_impact_data["project"] == st.session_state.selected_project].index[0]
+            fig.add_shape(
+                type="rect",
+                xref="x",
+                yref="paper",
+                x0=selected_idx-0.4,
+                y0=0,
+                x1=selected_idx+0.4,
+                y1=1,
+                line=dict(color="Gold", width=3),
+                fillcolor="rgba(255, 215, 0, 0.1)"
+            )
         
         fig.update_layout(legend=dict(
             title="Risk Component",
@@ -699,6 +598,9 @@ def main():
             "project": "count"
         }).reset_index().rename(columns={"project": "count"})
         
+        # Highlight the selected project's type
+        project_type_impact["is_selected"] = project_type_impact["project_type"] == project_data["project_type"]
+        
         fig = px.bar(project_type_impact,
                     x="project_type",
                     y="market_risk",
@@ -706,6 +608,21 @@ def main():
                     color="market_risk",
                     color_continuous_scale=[(0, "#00CC96"), (0.5, "#FFA500"), (1, "#FF4B4B")],
                     text="count")
+        
+        # Highlight selected project type
+        for i, row in project_type_impact.iterrows():
+            if row["project_type"] == project_data["project_type"]:
+                fig.add_shape(
+                    type="rect",
+                    xref="x",
+                    yref="paper",
+                    x0=i-0.4,
+                    y0=0,
+                    x1=i+0.4,
+                    y1=1,
+                    line=dict(color="Gold", width=3),
+                    fillcolor="rgba(255, 215, 0, 0.1)"
+                )
         
         fig.update_traces(texttemplate='%{text} projects', textposition='outside')
         st.plotly_chart(fig, use_container_width=True)
@@ -733,24 +650,28 @@ def main():
             
         with col2:
             # Market risk explanation
-            # Market risk explanation
             st.subheader("Market Risk Analysis")
             st.write(f"Project type: **{project_data['project_type']}**")
             
-            # Calculate average sentiment
-            avg_sentiment = sum(n["sentiment"] for n in news_data) / len(news_data)
-            st.write(f"Current market sentiment: **{avg_sentiment:.2f}**")
-            
-            if avg_sentiment < -0.1:
-                st.error("Negative market conditions increase project risk")
-            elif avg_sentiment > 0.1:
-                st.success("Positive market conditions mitigate project risk")
+            # Calculate average sentiment for the selected project
+            project_news = st.session_state.master_news.get(st.session_state.selected_project, [])
+            if project_news:
+                avg_sentiment = sum(n["sentiment"] for n in project_news) / len(project_news)
+                st.write(f"Current market sentiment: **{avg_sentiment:.2f}**")
+                
+                if avg_sentiment < -0.1:
+                    st.error("Negative market conditions increase project risk")
+                elif avg_sentiment > 0.1:
+                    st.success("Positive market conditions mitigate project risk")
+                else:
+                    st.info("Neutral market conditions with minimal impact")
             else:
-                st.info("Neutral market conditions with minimal impact")
+                st.write("No market sentiment data available for this project")
                 
             # Market risk breakdown
             st.write(f"Market risk contribution: **+{project_data['market_risk']:.1f} points** to risk score")
             st.write(f"Final risk score: **{project_data['final_risk_score']:.1f}** (Base: {project_data['risk_score']:.1f})")
+
             
     elif page == "AI Chatbot":
         # Chatbot page
