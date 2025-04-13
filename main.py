@@ -11,6 +11,7 @@ import os
 import google.generativeai as genai
 from textblob import TextBlob
 from dotenv import load_dotenv
+import random
 
 from utils.utils import market_impact_on_project, create_master_news_list
 from utils.risk_tools import calculate_risk_score, get_risk_level, project_risk_summary, create_project_metrics_table, create_risk_factors_chart, format_published_date, create_risk_gauge
