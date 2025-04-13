@@ -1,7 +1,7 @@
 import datetime
 import plotly.graph_objects as go
 from utils.utils import fetch_news, analyze_news_sentiment, generate_query
-
+import streamlit as st
 # Constants
 HIGH_RISK_THRESHOLD = 70
 MEDIUM_RISK_THRESHOLD = 40
