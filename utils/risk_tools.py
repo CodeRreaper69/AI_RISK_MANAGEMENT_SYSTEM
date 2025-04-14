@@ -19,7 +19,7 @@ class JiraConnector:
             email (str): Jira account email
             api_token (str): Jira API token
         """
-        self.base_url = base_url
+        self.base_url = "https://ezioauditoredefirenze132003.atlassian.net"
         self.auth = (email, api_token)
         self.headers = {
             "Accept": "application/json",
