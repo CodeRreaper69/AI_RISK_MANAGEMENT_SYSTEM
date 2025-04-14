@@ -404,10 +404,28 @@ def project_risk_summary(project_data):
 
     return summary
 
+import datetime  # Added import statement
+
 def format_published_date(published_at):
-    """Convert ISO 8601 date to a user-friendly format."""
+    """Convert ISO 8601 date to a user-friendly format.
+    
+    Args:
+        published_at (str): Date string in ISO 8601 format (e.g., '2023-01-15T14:30:00Z')
+        
+    Returns:
+        str: Formatted date (e.g., 'January 15, 2023 at 02:30 PM') or original string if parsing fails
+    """
     try:
-        date_obj = datetime.datetime.strptime(published_at, "%Y-%m-%dT%H:%M:%SZ")
+        # Handle potential missing timezone indicator
+        if published_at.endswith('Z'):
+            date_obj = datetime.datetime.strptime(published_at, "%Y-%m-%dT%H:%M:%SZ")
+        else:
+            # Handle alternative formats if needed
+            date_obj = datetime.datetime.fromisoformat(published_at)
+            
+        # Convert to local timezone (optional)
+        # date_obj = date_obj.replace(tzinfo=datetime.timezone.utc).astimezone()
+        
         return date_obj.strftime("%B %d, %Y at %I:%M %p")
-    except ValueError:
-        return published_at  # Return as-is if parsing fails
+    except (ValueError, TypeError):
+        return published_at  # Return original if parsing fails
