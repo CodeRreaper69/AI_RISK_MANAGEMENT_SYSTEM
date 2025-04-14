@@ -655,7 +655,7 @@ def main():
                     processed_fallback_news.append(processed_news)
                 
                 # Display fallback news
-                st.warning("Using sample news data as no specific news found for this project.")
+                st.markdown("Using sample news data as no specific news found for this project.")
                 
                 # Calculate average sentiment for fallback news
                 avg_sentiment = sum(n["sentiment"] for n in processed_fallback_news) / len(processed_fallback_news)
