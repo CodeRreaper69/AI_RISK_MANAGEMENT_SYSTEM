@@ -15,7 +15,7 @@ class JiraConnector:
         Initialize Jira connector
         
         Args:
-            base_url (str): Jira instance URL (e.g., 'https://your-domain.atlassian.net')
+            base_url (str): Jira instance URL (e.g., 'https://ezioauditoredefirenze132003.atlassian.net')
             email (str): Jira account email
             api_token (str): Jira API token
         """
