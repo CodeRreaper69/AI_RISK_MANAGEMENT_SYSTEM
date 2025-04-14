@@ -444,7 +444,8 @@ def main():
                 df_projects = generate_dynamic_dashboard_values(df_projects)
                 st.rerun()
         except:
-            st.toast("Could not refresh, try again after sometime!")
+            # st.toast("Could not refresh, try again after sometime!")
+            pass
         # Overview Dashboard
         st.title("📊 Project Risk Dashboard")
 
