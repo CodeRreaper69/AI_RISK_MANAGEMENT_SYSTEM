@@ -314,7 +314,7 @@ def fetch_news2(query, limit=5):
     return filtered_articles
 
 
-def fetch_news(query, limit=100):
+def fetch_news(query, limit=6):
     import re
     
     # Lowercase query
