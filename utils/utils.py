@@ -281,9 +281,9 @@ def load_sentence_transformer(model_name="all-MiniLM-L6-v2"):
         "model_type": "sentence-transformer"
     }
 
-def fetch_news2(query, limit=5):
+def fetch_news(query, limit=5):
     # api_key = os.getenv("NEWS_API_KEY")
-    api_key = st.secrets["NEWS_API_KEY"]
+    api_key = st.secrets["NEWS_API_KEY_1"]
     
     newsapi = NewsApiClient(api_key=api_key)
 
@@ -314,7 +314,7 @@ def fetch_news2(query, limit=5):
     return filtered_articles
 
 
-def fetch_news(query, limit=5):
+def fetch_news2(query, limit=5):
     import re
     
     # Lowercase query
