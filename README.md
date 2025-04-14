@@ -48,7 +48,7 @@ AI Project Risk Management System
    - Simulates real-time risk assessment with random variations
    - Incorporates market impact factors into risk calculations
 
-4. **`simulate_project_scraping()`**: Simulates real-time data collection with progress tracking.
+4. **`project_scraping()`**: Real-time data collection with progress tracking.
    - Creates a visual representation of data gathering process
    - Updates project metrics with newly "scraped" information
 
